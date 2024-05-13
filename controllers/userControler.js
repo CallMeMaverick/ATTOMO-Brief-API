@@ -24,7 +24,8 @@ exports.signup = async (req, res) => {
             name,
             surname,
             email,
-            password
+            password,
+            bookings: []
         });
 
         await newUser.save();
@@ -57,7 +58,8 @@ exports.signupAdmin = async (req, res) => {
             surname,
             email,
             password,
-            role: "admin"
+            role: "admin",
+            bookings: []
         });
 
         await newUser.save();
@@ -109,6 +111,29 @@ exports.getUser = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: "Could not fetch the user",
+            error: error.toString()
+        })
+    }
+}
+
+exports.deleteUser = async (req, res) => {
+    const { userId } = req.params.userId;
+
+    try {
+        const result = await User.findByIdAndDelete(userId);
+
+        if (!result) {
+            return res.status(404).json({
+                message: "Could not found the user",
+            })
+        }
+
+        res.status(200).json({
+            message: "User successfully deleted"
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Error deleting user",
             error: error.toString()
         })
     }

@@ -6,7 +6,8 @@ const accommodationSchema = new Schema({
     type: { type: String, required: true },
     location: String,
     pricePerNight: { type: Number, required: true },
-    images: String
+    images: String,
+    bookedBy: { type: [Schema.Types.ObjectId], ref: "users" }
 }, { timestamps: true });
 
 module.exports = mongoose.model('accommodations', accommodationSchema);
