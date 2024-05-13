@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 const { validateEmail, validatePassword } = require("../utils/authValidators")
 require("dotenv").config({ path: "../.env" });
@@ -63,7 +64,18 @@ exports.signupAdmin = async (req, res) => {
         });
 
         await newUser.save();
-        res.status(201).json({ message: "Admin created successfully", user: newUser });
+
+        const token = jwt.sign(
+            { id: newUser._id, role: newUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }  // Adjust according to your needs
+        );
+
+        res.status(201).json({
+            message: "Admin created successfully",
+            user: newUser,
+            token: token
+        });
     } catch (error) {
         console.error("Signup error:", error);
         res.status(500).json({ message: "Failed to create user", error: error.toString() });
@@ -103,7 +115,17 @@ exports.loginAdmin = async (req, res) => {
             return res.status(401).json({ message: "Incorrect password" });
         }
 
-        res.status(200).json({ message: "Login successful", admin });
+        const token = jwt.sign(
+            { id: admin._id, role: admin.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' } // Token expires in one hour
+        );
+
+        res.status(200).json({
+            message: "Login successful",
+            token: token, // Send the token to the client
+            adminId: admin._id // Optionally include the admin ID
+        });
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ message: "Error during login", error: error.toString() });
@@ -158,3 +180,11 @@ exports.deleteUser = async (req, res) => {
         })
     }
 }
+
+// exports.book = async (req, res) => {
+//     const { accommodationId } = req.params.accommodationId;
+//
+//     try {
+//
+//     }
+// }
