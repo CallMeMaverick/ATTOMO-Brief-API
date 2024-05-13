@@ -46,3 +46,26 @@ exports.addAccommodation = async (req, res) => {
 
     }
 }
+
+exports.deleteAccommodation = async (req, res) => {
+    const { accommodationId } = req.params.accommodationId;
+
+    try {
+        const result = await Accommodation.findByIdAndDelete(accommodationId);
+
+        if (result) {
+            return res.status(404).json({
+                message: "Accommodation not found"
+            })
+        }
+
+        res.status(200).json({
+            message: "Accommodation successfully deleted"
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Error deleting accommodation",
+            error: error.toString()
+        })
+    }
+}
