@@ -49,7 +49,7 @@ exports.addAccommodation = async (req, res) => {
 }
 
 exports.deleteAccommodation = async (req, res) => {
-    const { accommodationId } = req.params;
+    const accommodationId = req.params.accommodationId;
 
     try {
         const result = await Accommodation.findByIdAndDelete(accommodationId);
