@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Accommodation = require("../models/Accommodation")
 const jwt = require("jsonwebtoken");
 
 const { validateEmail, validatePassword } = require("../utils/authValidators")
@@ -29,8 +30,24 @@ exports.signup = async (req, res) => {
             bookings: []
         });
 
+
         await newUser.save();
-        res.status(201).json({ message: "User created successfully", user: newUser });
+
+        const token = jwt.sign(
+            { id: newUser._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.status(201).json({
+            message: "User created successfully",
+            user: {
+                id: newUser._id,  // For security, avoid sending sensitive information
+                name: newUser.name,
+                email: newUser.email
+            },
+            token: token
+        });
     } catch (error) {
         console.error("Signup error:", error);
         res.status(500).json({ message: "Failed to create user", error: error.toString() });
@@ -95,7 +112,22 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: "Incorrect password" });
         }
 
-        res.status(200).json({ message: "Login successful", user });
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // Send a single response back to the client
+        return res.status(200).json({
+            message: "Login successful",
+            user: {
+                id: user._id,  // For security, avoid sending sensitive information
+                name: user.name,
+                email: user.email
+            },
+            token: token
+        });
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ message: "Error during login", error: error.toString() });
@@ -181,10 +213,48 @@ exports.deleteUser = async (req, res) => {
     }
 }
 
-// exports.book = async (req, res) => {
-//     const { accommodationId } = req.params.accommodationId;
-//
-//     try {
-//
-//     }
-// }
+exports.book = async (req, res) => {
+    const accommodationId = req.params.accommodationId;
+    const userId = req.userData.id;
+
+
+    try {
+        const accommodation = await Accommodation.findById(accommodationId);
+        if (!accommodation) {
+            return res.status(404).json({
+                message: "Could not find the accommodation"
+            })
+        }
+
+        if (accommodation.bookedBy.length > 0) {
+            return res.status(400).json({
+                message: "Accommodation is already booked"
+            })
+        }
+
+        accommodation.bookedBy.push(userId);
+        await accommodation.save();
+
+        const user = await User.findById(userId);
+        console.log(user);
+        if (user) {
+            user.bookings.push(accommodationId);
+            await user.save();
+        }
+        console.log("Bookings after update:", user.bookings);
+
+        res.json({
+            message: "Booking successful",
+            accommodation: {
+                id: accommodation._id,
+                name: accommodation.name,
+                location: accommodation.location
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Failed to book accommodation",
+            error: error.toString()
+        });
+    }
+}
