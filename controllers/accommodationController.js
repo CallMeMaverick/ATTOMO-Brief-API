@@ -69,3 +69,17 @@ exports.deleteAccommodation = async (req, res) => {
         })
     }
 }
+
+exports.getAccommodation = async (req, res) => {
+    const { accommodationId } = req.params.accommodationId;
+
+    try {
+        const accommodation = await Accommodation.findById(accommodationId);
+        res.json(accommodation)
+    } catch (error) {
+        res.status(500).json({
+            message: "Could not fetch the accommodation",
+            error: error.toString()
+        })
+    }
+}
