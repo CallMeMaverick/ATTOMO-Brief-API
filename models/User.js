@@ -16,15 +16,14 @@ const UserSchema = new Schema({
 
 /*
  * Middleware that is used before the document is saved to the database.
- * if (!this.isModified("password")) is used for not re-hashing the password.
+ * if (this.isModified("password")) is used for not re-hashing the password.
  */
 UserSchema.pre("save", async function(next) {
-    if (!this.isModified("password")) {
-        return next();
+    if (this.isModified("password") || this.isNew) {
+        this.password = await bcrypt.hash(this.password, 8);
     }
-
-    this.password = await bcrypt.hash(this.password, 8);
-})
+    next();
+});
 
 UserSchema.methods.comparePassword = function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
