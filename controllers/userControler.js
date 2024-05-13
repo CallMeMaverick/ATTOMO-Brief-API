@@ -90,6 +90,26 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.loginAdmin = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const admin = await User.findOne({ email, role: "admin" });
+        if (!admin) {
+            return res.status(401).json({ message: "User not found" });
+        }
+
+        const isMatch = await admin.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Incorrect password" });
+        }
+
+        res.status(200).json({ message: "Login successful", admin });
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ message: "Error during login", error: error.toString() });
+    }
+};
+
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.find();
