@@ -1,4 +1,5 @@
 const Accommodation = require("../models/Accommodation");
+const User = require("../models/User")
 
 exports.getAccommodations = async (req, res) => {
     const { type, location, priceLt, sort } = req.query;
@@ -80,6 +81,44 @@ exports.getAccommodation = async (req, res) => {
         res.status(500).json({
             message: "Could not fetch the accommodation",
             error: error.toString()
+        })
+    }
+}
+
+exports.dismissBooking = async(req, res) => {
+    const accommodationId = req.params.accommodationId;
+
+    try {
+        const accommodation = await Accommodation.findById(accommodationId);
+
+        if (!accommodation) {
+            return res.status(404).json({
+                message: "Could not found the accommodation"
+            })
+        }
+
+        const bookerId = accommodation.bookedBy[0].toString();
+        console.log(bookerId);
+        const booker = await User.findById(bookerId);
+
+        if (!booker) {
+            return res.status(404).json({
+                message: "Could not found the user"
+            })
+        }
+
+        booker.bookings = booker.bookings.filter(id => id.toString() !== accommodationId);
+        accommodation.bookedBy = accommodation.bookedBy.filter(id => id.toString() !== bookerId);
+
+        await booker.save();
+        await accommodation.save();
+
+        res.status(200).json({
+            message: "Booking dismissed"
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: "Could not dismiss the booking"
         })
     }
 }
