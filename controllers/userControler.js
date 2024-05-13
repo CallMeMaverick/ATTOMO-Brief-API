@@ -177,7 +177,7 @@ exports.getUsers = async (req, res) => {
 }
 
 exports.getUser = async (req, res) => {
-    const { userId } = req.params.userId;
+    const userId = req.params.userId;
 
     try {
         const user = await User.findById(userId);
