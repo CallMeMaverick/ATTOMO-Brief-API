@@ -35,6 +35,39 @@ exports.signup = async (req, res) => {
     }
 };
 
+exports.signupAdmin = async (req, res) => {
+    const { name, surname, email, password } = req.body;
+
+    // Validate email and password
+    if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Invalid email format." });
+    }
+    if (!validatePassword(password)) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long and contain a mix of letters and numbers." });
+    }
+
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ message: 'Email already in use' });
+        }
+
+        const newUser = new User({
+            name,
+            surname,
+            email,
+            password,
+            role: "admin"
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: "Admin created successfully", user: newUser });
+    } catch (error) {
+        console.error("Signup error:", error);
+        res.status(500).json({ message: "Failed to create user", error: error.toString() });
+    }
+};
+
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
@@ -55,3 +88,4 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: "Error during login", error: error.toString() });
     }
 };
+
