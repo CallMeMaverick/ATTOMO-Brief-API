@@ -68,7 +68,6 @@ exports.signupAdmin = async (req, res) => {
     }
 };
 
-
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -89,3 +88,28 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.getUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users)
+    } catch (error) {
+        res.json({
+            message: "Could not fetch users",
+            error: error.toString()
+        })
+    }
+}
+
+exports.getUser = async (req, res) => {
+    const { userId } = req.params.userId;
+
+    try {
+        const user = await User.findById(userId);
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({
+            message: "Could not fetch the user",
+            error: error.toString()
+        })
+    }
+}
