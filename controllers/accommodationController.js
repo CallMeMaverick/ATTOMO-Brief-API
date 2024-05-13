@@ -32,7 +32,7 @@ exports.addAccommodation = async (req, res) => {
             images
         })
 
-        await Accommodation.save();
+        await newAccommodation.save();
 
         res.status(201).json({
             message: "Accommodation added successfully",
@@ -48,7 +48,7 @@ exports.addAccommodation = async (req, res) => {
 }
 
 exports.deleteAccommodation = async (req, res) => {
-    const { accommodationId } = req.params.accommodationId;
+    const { accommodationId } = req.params;
 
     try {
         const result = await Accommodation.findByIdAndDelete(accommodationId);
@@ -71,7 +71,7 @@ exports.deleteAccommodation = async (req, res) => {
 }
 
 exports.getAccommodation = async (req, res) => {
-    const { accommodationId } = req.params.accommodationId;
+    const { accommodationId } = req.params;
 
     try {
         const accommodation = await Accommodation.findById(accommodationId);
