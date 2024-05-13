@@ -19,3 +19,30 @@ exports.getAccommodations = async (req, res) => {
         })
     }
 }
+
+exports.addAccommodation = async (req, res) => {
+    const { name, type, location, pricePerNight, images } = req.body;
+
+    try {
+        const newAccommodation = new Accommodation({
+            name,
+            type,
+            location,
+            pricePerNight,
+            images
+        })
+
+        await Accommodation.save();
+
+        res.status(201).json({
+            message: "Accommodation added successfully",
+            accommodation: newAccommodation
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Failed to add an accommodation",
+            error: error.toString()
+        })
+
+    }
+}
