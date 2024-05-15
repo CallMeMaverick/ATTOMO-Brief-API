@@ -274,3 +274,65 @@ exports.getUserBookings = async (req, res) => {
         })
     }
 }
+
+exports.getAdmin = async (req, res) => {
+    const adminId = req.params.adminId;
+
+    try {
+        const admin = await User.findById(adminId);
+        res.json(admin);
+    } catch (error) {
+        res.status(500).json({
+            message: "Could not fetch the admin",
+            error: error.toString()
+        })
+    }
+}
+
+exports.updateAdmin = async (req, res) => {
+    const adminId = req.params.adminId;
+    const updatedData = req.body;
+
+    try {
+        const admin = await User.findByIdAndUpdate(adminId, updatedData, { new: true });
+        if (!admin) {
+            return res.status(404).json({
+                message: "Admin not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Admin successfully updated",
+            admin
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Error updating the admin",
+            error: error.toString()
+        })
+    }
+}
+
+exports.updateUser = async (req, res) => {
+    const userId = req.params.userId;
+    const updatedData = req.body;
+
+    try {
+        const user = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "User successfully updated",
+            user
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Error updating the admin",
+            error: error.toString()
+        })
+    }
+}

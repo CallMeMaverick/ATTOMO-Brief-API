@@ -156,6 +156,7 @@ exports.updateAccommodation = async (req, res) => {
     const { accommodationId } = req.params;
     const updatedData = req.body;
 
+
     try {
         const accommodation = await Accommodation.findByIdAndUpdate(accommodationId, updatedData, { new: true });
 
