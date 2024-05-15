@@ -1,21 +1,14 @@
 const User = require("../models/User");
 const Accommodation = require("../models/Accommodation")
 const jwt = require("jsonwebtoken");
+const dismissBookings = require("../utils/dismissBookings");
 
 const { validateEmail, validatePassword } = require("../utils/authValidators")
+const {dismissBooking} = require("../utils/dismissBookings");
 require("dotenv").config({ path: "../.env" });
 
 exports.signup = async (req, res) => {
     const { name, surname, email, password } = req.body;
-
-    // Validate email and password
-    if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format." });
-    }
-    if (!validatePassword(password)) {
-        return res.status(400).json({ message: "Password must be at least 8 characters long and contain a mix of letters and numbers." });
-    }
-
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -26,33 +19,17 @@ exports.signup = async (req, res) => {
             name,
             surname,
             email,
-            password,
-            bookings: []
+            password
         });
-
-
         await newUser.save();
 
-        const token = jwt.sign(
-            { id: newUser._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        res.status(201).json({
-            message: "User created successfully",
-            user: {
-                id: newUser._id,  // For security, avoid sending sensitive information
-                name: newUser.name,
-                email: newUser.email
-            },
-            token: token
-        });
+        return res.status(201).json({ message: "User created successfully" });
     } catch (error) {
         console.error("Signup error:", error);
-        res.status(500).json({ message: "Failed to create user", error: error.toString() });
+        return res.status(500).json({ message: "Failed to create user", error: error.toString() });
     }
 };
+
 
 exports.signupAdmin = async (req, res) => {
     const { name, surname, email, password } = req.body;
@@ -192,32 +169,42 @@ exports.getUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     const userId = req.params.userId;
-    console.log(userId);
 
     try {
-        const result = await User.findByIdAndDelete(userId);
+        const user = await User.findById(userId);
 
-        if (!result) {
+        if (!user) {
             return res.status(404).json({
-                message: "Could not found the user",
-            })
+                message: "Could not find the user",
+            });
         }
+
+        // Dismiss all bookings
+        for (const bookingId of user.bookings) {
+            const result = await dismissBookings(bookingId);
+            if (!result.success) {
+                return res.status(500).json({
+                    message: `Error dismissing booking with id ${bookingId}: ${result.message}`
+                });
+            }
+        }
+
+        // Delete the user
+        await User.findByIdAndDelete(userId);
 
         res.status(200).json({
             message: "User successfully deleted"
-        })
+        });
     } catch (error) {
         res.status(500).json({
             message: "Error deleting user",
             error: error.toString()
-        })
+        });
     }
-}
+};
 
 exports.book = async (req, res) => {
-    const accommodationId = req.params.accommodationId;
-    const userId = req.userData.id;
-
+    const { userId, accommodationId } = req.params;
 
     try {
         const accommodation = await Accommodation.findById(accommodationId);
@@ -257,5 +244,33 @@ exports.book = async (req, res) => {
             message: "Failed to book accommodation",
             error: error.toString()
         });
+    }
+}
+
+exports.getBooker = async (req, res) => {
+    const { bookerId } = req.params;
+
+    try {
+        const booker = await User.findById(bookerId);
+        res.json(booker);
+    } catch (error) {
+        res.status(500).json({
+            message: "Could not fetch the booker",
+            error: error.toString()
+        })
+    }
+}
+
+exports.getUserBookings = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        res.json(user.bookings);
+    } catch (error) {
+        res.status(500).json({
+            message: "Could not fetch a user",
+            error: error.toString()
+        })
     }
 }

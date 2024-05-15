@@ -3,7 +3,7 @@ const User = require("../models/User");
 const userController = require("../controllers/userControler")
 const Accommodation = require("../models/Accommodation");
 const accommodationController = require("../controllers/accommodationController");
-const { authenticateAndAuthorizeAdmin } = require("../middleware/authenticate")
+const { authenticate, authenticateAndAuthorizeAdmin } = require("../middleware/authenticate")
 
 // User sing up
 router.post('/signup', userController.signup);
@@ -17,14 +17,20 @@ router.post('/login/admin', userController.loginAdmin);
 router.get('/users', authenticateAndAuthorizeAdmin, userController.getUsers)
 // Getting a user by id (admin role)
 router.get("/user/:userId", authenticateAndAuthorizeAdmin, userController.getUser)
+
+router.get('/user/:userId/bookings', authenticate,  userController.getUserBookings)
 // Deleting user (admin role)
 router.delete("/user/:userId", authenticateAndAuthorizeAdmin, userController.deleteUser)
+// Getting booker
+router.get("/booker/:bookerId", userController.getBooker)
 // Booking accommodation
-router.post('/accommodation/:accommodationId/book', userController.book)
+router.post('/accommodation/:userId/:accommodationId/book', authenticate, userController.book)
 
 
 // Getting all accommodations
 router.get('/accommodations', accommodationController.getAccommodations);
+// Getting accommodation for the user
+router.get('/accommodation/:accommodationId', accommodationController.getAccommodationUser)
 // Getting specific accommodation by id (admin role)
 router.get('/accommodation/:accommodationId', authenticateAndAuthorizeAdmin, accommodationController.getAccommodation)
 // Adding accommodation (admin status)
@@ -33,6 +39,7 @@ router.post('/accommodations', authenticateAndAuthorizeAdmin, accommodationContr
 router.delete("/accommodation/:accommodationId", authenticateAndAuthorizeAdmin, accommodationController.deleteAccommodation);
 // Dismissing the booking
 router.post('/accommodation/:accommodationId/dismissBooking', authenticateAndAuthorizeAdmin, accommodationController.dismissBooking);
-
+// Updating the booking (admin role)
+router.put('/accommodations/update/:accommodationId', authenticateAndAuthorizeAdmin, accommodationController.updateAccommodation);
 
 module.exports = router;

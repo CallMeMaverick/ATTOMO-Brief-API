@@ -3,10 +3,14 @@ require("dotenv").config({ path: "../.env" })
 
 const authenticate = (req, res, next) => {
     try {
-        const token = req.headers.authorization.split(" ")[1]; // Bearer <token>
+        console.log(req.headers);
+        const token = req.headers.authorization.split(" ")[1];
+        console.log(token);
+        console.log("THIS, ", process.env.JWT_SECRET);
         req.userData = jwt.verify(token, process.env.JWT_SECRET);
         next();
     } catch (error) {
+        console.error("Authentication error:", error); // Debug log
         return res.status(401).json({ message: "Authentication failed" });
     }
 };

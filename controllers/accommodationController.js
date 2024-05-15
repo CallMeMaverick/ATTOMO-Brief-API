@@ -1,5 +1,7 @@
 const Accommodation = require("../models/Accommodation");
 const User = require("../models/User")
+const dismissBookings = require("../utils/dismissBookings")
+
 
 exports.getAccommodations = async (req, res) => {
     const { type, location, priceLt, sort } = req.query;
@@ -49,27 +51,40 @@ exports.addAccommodation = async (req, res) => {
 }
 
 exports.deleteAccommodation = async (req, res) => {
-    const accommodationId = req.params.accommodationId;
+    const {accommodationId} = req.params;
 
     try {
-        const result = await Accommodation.findByIdAndDelete(accommodationId);
-
-        if (result) {
+        const accommodation = await Accommodation.findById(accommodationId);
+        console.log("FIND");
+        if (!accommodation) {
             return res.status(404).json({
                 message: "Accommodation not found"
-            })
+            });
         }
+
+        console.log("found accommodation");
+        if (accommodation.bookedBy.length !== 0) {
+            const result = await dismissBookings(accommodationId);
+            if (!result.success) {
+                return res.status(500).json({
+                    message: `Error dismissing booking: ${result.message}`
+                });
+            }
+        }
+
+        console.log("deleting accommodation");
+        await Accommodation.findByIdAndDelete(accommodationId);
 
         res.status(200).json({
             message: "Accommodation successfully deleted"
-        })
+        });
     } catch (error) {
         res.status(500).json({
             message: "Error deleting accommodation",
             error: error.toString()
-        })
+        });
     }
-}
+};
 
 exports.getAccommodation = async (req, res) => {
     const { accommodationId } = req.params;
@@ -122,3 +137,44 @@ exports.dismissBooking = async(req, res) => {
         })
     }
 }
+
+exports.getAccommodationUser = async (req, res) => {
+    const { accommodationId } = req.params;
+
+    try {
+        const accommodation = await Accommodation.findById(accommodationId);
+        res.json(accommodation);
+    } catch (error) {
+        res.status(500).json({
+            message: "Could not fetch the accommodation",
+            error: error.toString()
+        })
+    }
+}
+
+exports.updateAccommodation = async (req, res) => {
+    const { accommodationId } = req.params;
+    const updatedData = req.body;
+
+    try {
+        const accommodation = await Accommodation.findByIdAndUpdate(accommodationId, updatedData, { new: true });
+
+        if (!accommodation) {
+            return res.status(404).json({
+                message: "Accommodation not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Accommodation successfully updated",
+            accommodation
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error updating accommodation",
+            error: error.toString()
+        });
+    }
+};
+
+
