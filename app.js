@@ -3,7 +3,6 @@ const connectDB = require("./config/database");
 const router = require("./routes/index");
 const {authenticate} = require("./middleware/authenticate")
 const cors = require("cors");
-const checkUserExists = require("./middleware/checkUserExists")
 require("dotenv").config();
 
 const app = express();
@@ -15,6 +14,5 @@ app.use(express.urlencoded({ extended: true }))
 connectDB(process.env.MONGO_STRING);
 
 app.use(router);
-app.use(checkUserExists);
 
 app.listen(3001);
