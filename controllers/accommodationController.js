@@ -51,18 +51,16 @@ exports.addAccommodation = async (req, res) => {
 }
 
 exports.deleteAccommodation = async (req, res) => {
-    const {accommodationId} = req.params;
+    const { accommodationId } = req.params;
 
     try {
         const accommodation = await Accommodation.findById(accommodationId);
-        console.log("FIND");
         if (!accommodation) {
             return res.status(404).json({
                 message: "Accommodation not found"
             });
         }
 
-        console.log("found accommodation");
         if (accommodation.bookedBy.length !== 0) {
             const result = await dismissBookings(accommodationId);
             if (!result.success) {
@@ -71,8 +69,6 @@ exports.deleteAccommodation = async (req, res) => {
                 });
             }
         }
-
-        console.log("deleting accommodation");
         await Accommodation.findByIdAndDelete(accommodationId);
 
         res.status(200).json({
@@ -155,7 +151,6 @@ exports.getAccommodationUser = async (req, res) => {
 exports.updateAccommodation = async (req, res) => {
     const { accommodationId } = req.params;
     const updatedData = req.body;
-
 
     try {
         const accommodation = await Accommodation.findByIdAndUpdate(accommodationId, updatedData, { new: true });
